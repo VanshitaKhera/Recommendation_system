@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Search</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        input {
+            width: 300px;
+            padding: 8px;
+            font-size: 16px;
+        }
+        #suggestions {
+            margin-top: 10px;
+            max-height: 100px;
+            overflow-y: auto;
+            position: absolute;
+            width: 300px;
+            border: 1px solid #ccc;
+            display: none;
+        }
+        .suggestion {
+            cursor: pointer;
+            padding: 8px;
+            border-bottom: 1px solid #ccc;
+            width: 100%; /* Set the width to 100% */
+}
+
+        .suggestion:last-child {
+            border-bottom: none;
+        }
+        .suggestion:hover {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Product Search</h1>
+    <input type="text" id="searchInput" oninput="getAutocompleteSuggestions()" onkeydown="handleKeyDown()">
+    <div id="suggestions"></div>
+
+    <script>
+        function getAutocompleteSuggestions() {
+            const inputElement = document.getElementById('searchInput');
+            const inputValue = inputElement.value.trim();
+
+            if (inputValue.length === 0) {
+                clearSuggestions();
+                return;
+            }
+
+            fetch(`/autocomplete?prefix=${inputValue}`)
+                .then(response => response.json())
+                .then(suggestions => showSuggestions(suggestions));
+        }
+
+        function showSuggestions(suggestions) {
+            const suggestionsElement = document.getElementById('suggestions');
+            suggestionsElement.innerHTML = '';
+
+            for (const [word, _] of suggestions) {
+                const suggestionDiv = document.createElement('div');
+                suggestionDiv.className = 'suggestion';
+                suggestionDiv.textContent = word;
+                suggestionDiv.onclick = () => {
+                    document.getElementById('searchInput').value = word;
+                    clearSuggestions();
+                };
+                suggestionsElement.appendChild(suggestionDiv);
+            }
+
+            suggestionsElement.style.display = suggestions.length ? 'block' : 'none';
+        }
+
+
+        function clearSuggestions() {
+            const suggestionsElement = document.getElementById('suggestions');
+            suggestionsElement.innerHTML = '';
+            suggestionsElement.style.display = 'none';
+        }
+
+        function handleKeyDown() {
+            const inputElement = document.getElementById('searchInput');
+            const suggestionsElement = document.getElementById('suggestions');
+            const selectedSuggestion = suggestionsElement.querySelector('.suggestion:hover');
+
+            if (event.key === 'Enter' && selectedSuggestion) {
+                inputElement.value = selectedSuggestion.textContent;
+                clearSuggestions();
+            }
+        }
+    </script>
+</body>
+</html>
